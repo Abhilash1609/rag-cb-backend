@@ -7,4 +7,5 @@ def verify_google_token(id_token_str: str) -> str:
         idinfo = id_token.verify_oauth2_token(id_token_str, requests.Request())
         return idinfo["sub"]  # Unique user ID
     except Exception as e:
+        print("Token verification failed:", e)
         raise ValueError(f"Invalid token: {e}")

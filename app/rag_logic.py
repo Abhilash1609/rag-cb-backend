@@ -4,7 +4,7 @@ from app.prompt_engineer import build_prompt
 
 COLLECTION_NAME = "rag-chatbot"
 
-def ask_question(query: str) -> str:
+def ask_question(query: str) -> tuple[str, list[float]]:
     query_vector = generate_embedding(query)
     search_results = search_similar_docs(COLLECTION_NAME, query_vector)
 
@@ -17,4 +17,7 @@ def ask_question(query: str) -> str:
         })
 
     prompt = build_prompt(query, context_docs)
-    return generate_answer(prompt)
+    answer = generate_answer(prompt)
+
+    return answer, query_vector
+

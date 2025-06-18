@@ -1,7 +1,6 @@
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import VectorParams, Distance
+from qdrant_client.http.models import VectorParams, Distance, PayloadSchemaType
 from app.config import get_env_variable
-from qdrant_client.http.models import PayloadSchemaType
 
 QDRANT_URL = get_env_variable("QDRANT_URL")
 QDRANT_API_KEY = get_env_variable("QDRANT_API_KEY")
@@ -19,23 +18,29 @@ def init_qdrant_collection(collection_name: str = "chatbot_chunks", vector_size:
         )
 
 def init_user_collections():
-    # user_chats: stores user_id -> chat_id (can have multiple)
-    if "user_chats" not in [c.name for c in client.get_collections().collections]:
+    existing_collections = [c.name for c in client.get_collections().collections]
+
+    # ✅ user_chats: 3072-dim dummy vector
+    if "user_chats" not in existing_collections:
         client.recreate_collection(
             collection_name="user_chats",
-            vectors_config=VectorParams(size=1, distance=Distance.COSINE),  # dummy vector
-            on_disk_payload=True,
-            optimizers_config=None,
+            vectors_config=VectorParams(size=3072, distance=Distance.COSINE),  # fixed dimension
+            on_disk_payload=True
         )
+        client.create_payload_index("user_chats", "user_id", PayloadSchemaType.KEYWORD)
+        client.create_payload_index("user_chats", "chat_id", PayloadSchemaType.KEYWORD)
+        client.create_payload_index("user_chats", "chat_title", PayloadSchemaType.KEYWORD)
 
-    # chat_messages: stores messages linked to chat_id
-    if "chat_messages" not in [c.name for c in client.get_collections().collections]:
+    # ✅ chat_messages: real 3072-dim vectors
+    if "chat_messages" not in existing_collections:
         client.recreate_collection(
             collection_name="chat_messages",
-            vectors_config=VectorParams(size=1, distance=Distance.COSINE),  # dummy vector
-            on_disk_payload=True,
-            optimizers_config=None,
+            vectors_config=VectorParams(size=3072, distance=Distance.COSINE),
+            on_disk_payload=True
         )
+        client.create_payload_index("chat_messages", "user_id", PayloadSchemaType.KEYWORD)
+        client.create_payload_index("chat_messages", "chat_id", PayloadSchemaType.KEYWORD)
+
 
 def search_similar_docs(collection_name: str, query_vector: list[float], top_k: int = 3):
     return client.search(
