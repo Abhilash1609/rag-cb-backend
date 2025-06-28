@@ -1,41 +1,28 @@
-steps:
-  # Step 1: Build image with no cache
-  - name: 'gcr.io/cloud-builders/docker'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        docker build --no-cache -t gcr.io/$PROJECT_ID/rag-backend:$SHORT_SHA .
-        docker tag gcr.io/$PROJECT_ID/rag-backend:$SHORT_SHA gcr.io/$PROJECT_ID/rag-backend:latest
-
-  # Step 2: Push the new image
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/rag-backend:$SHORT_SHA']
-
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/rag-backend:latest']
-
-  # Step 3: Deploy to Cloud Run (clean, latest image)
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        gcloud run deploy rag-backend \
-          --image gcr.io/$PROJECT_ID/rag-backend:latest \
-          --region us-central1 \
-          --platform managed \
-          --allow-unauthenticated \
-          --service-account rag-backend-deployer@$PROJECT_ID.iam.gserviceaccount.com \
-          --timeout 600 \
-          --port 8080
-
 options:
   logging: CLOUD_LOGGING_ONLY
+  defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
 
-substitutions:
-  _REGION: us-central1
+steps:
+  # Step 1: Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/rag-backend', '.']
 
-images:
-  - gcr.io/$PROJECT_ID/rag-backend:$SHORT_SHA
-  - gcr.io/$PROJECT_ID/rag-backend:latest
+  # Step 2: Push image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/rag-backend']
+
+  # Step 3: Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - rag-backend
+      - --image=gcr.io/$PROJECT_ID/rag-backend
+      - --platform=managed
+      - --region=us-central1
+      - --allow-unauthenticated
+      - --port=8080
+      - --set-env-vars=GOOGLE_CLOUD_ENV=cloudrun
+
+timeout: 900s
