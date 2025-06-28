@@ -2,21 +2,18 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 steps:
-  # Step 1: Build Docker image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/rag-backend', '.']
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/rag-backend-repo/rag-backend', '.']
 
-  # Step 2: Push Docker image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/rag-backend']
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/rag-backend-repo/rag-backend']
 
-  # Step 3: Deploy image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
       [
         'run', 'deploy', 'rag-backend',
-        '--image', 'gcr.io/$PROJECT_ID/rag-backend',
+        '--image', 'us-central1-docker.pkg.dev/$PROJECT_ID/rag-backend-repo/rag-backend',
         '--platform', 'managed',
         '--region', 'us-central1',
         '--allow-unauthenticated',
@@ -24,4 +21,4 @@ steps:
       ]
 
 images:
-  - 'gcr.io/$PROJECT_ID/rag-backend'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/rag-backend-repo/rag-backend'
