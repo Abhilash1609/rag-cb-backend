@@ -1,0 +1,24 @@
+steps:
+  # Step 1: Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/rag-backend', '.']
+
+  # Step 2: Push Docker image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/rag-backend']
+
+  # Step 3: Deploy image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      [
+        'run', 'deploy', 'rag-backend',
+        '--image', 'gcr.io/$PROJECT_ID/rag-backend',
+        '--platform', 'managed',
+        '--region', 'us-central1',
+        '--allow-unauthenticated',
+        '--port', '8080'
+      ]
+
+images:
+  - 'gcr.io/$PROJECT_ID/rag-backend'
