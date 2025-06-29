@@ -11,7 +11,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/rag-backend']
 
-  # Step 3: Deploy to Cloud Run
+  # Step 3: Deploy to Cloud Run with secret mounted
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -24,5 +24,6 @@ steps:
       - --allow-unauthenticated
       - --port=8080
       - --set-env-vars=GOOGLE_CLOUD_ENV=cloudrun
+      - --set-secrets=rag-cb-secret=/etc/secrets/rag-cb-secret:latest
 
 timeout: 900s

@@ -1,12 +1,19 @@
 import os
 from dotenv import load_dotenv
 
-# Load local .env if exists
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ENV_PATH = os.path.join(BASE_DIR, "..", "secrets", ".env")
-load_dotenv(dotenv_path=ENV_PATH)
 
-# If not running on Cloud Run, set credentials manually
+# 1. Local development - load from secrets/.env if present
+local_env_path = os.path.join(BASE_DIR, "..", "secrets", ".env")
+if os.path.exists(local_env_path):
+    load_dotenv(dotenv_path=local_env_path)
+
+# 2. Cloud Run - load from mounted Secret Manager volume
+cloudrun_secret_path = "/etc/secrets/rag-cb-secret"
+if os.getenv("GOOGLE_CLOUD_ENV") == "cloudrun" and os.path.exists(cloudrun_secret_path):
+    load_dotenv(dotenv_path=cloudrun_secret_path)
+
+# 3. For local only: convert relative path to absolute path
 if os.getenv("GOOGLE_CLOUD_ENV") != "cloudrun":
     credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     if credentials_path:
