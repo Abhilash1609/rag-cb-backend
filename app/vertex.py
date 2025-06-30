@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+import google.auth
 from google.oauth2 import service_account
 import google.auth.transport.requests
 from app.config import get_env_variable
@@ -10,7 +11,7 @@ PROJECT_ID = os.getenv("GCP_PROJECT_ID")
 LOCATION = os.getenv("GCP_LOCATION", "us-central1")
 EMBEDDING_MODEL_ID = "gemini-embedding-001"
 GENERATION_MODEL_ID = "gemini-2.0-flash-001"
-SERVICE_ACCOUNT_FILE = get_env_variable("GOOGLE_APPLICATION_CREDENTIALS")
+GOOGLE_CLOUD_ENV = os.getenv("GOOGLE_CLOUD_ENV", "local")  # Default to local
 
 SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 
@@ -18,12 +19,16 @@ SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 # Auth: Get access token
 # ----------------------------
 def get_access_token():
-    if not SERVICE_ACCOUNT_FILE:
-        raise ValueError("GOOGLE_APPLICATION_CREDENTIALS is not set")
+    if GOOGLE_CLOUD_ENV == "cloudrun":
+        # ✅ Use Application Default Credentials in Cloud Run
+        credentials, _ = google.auth.default(scopes=SCOPES)
+    else:
+        # ✅ Use service account file locally
+        service_account_path = get_env_variable("GOOGLE_APPLICATION_CREDENTIALS")
+        credentials = service_account.Credentials.from_service_account_file(
+            service_account_path, scopes=SCOPES
+        )
 
-    credentials = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE, scopes=SCOPES
-    )
     auth_req = google.auth.transport.requests.Request()
     credentials.refresh(auth_req)
     return credentials.token
@@ -51,8 +56,7 @@ def call_vertex_embedding_api(text: str, token: str):
         ]
     }
 
-    response = requests.post(url, headers=headers, json=payload)
-    return response
+    return requests.post(url, headers=headers, json=payload)
 
 def generate_embedding(text: str):
     token = get_access_token()
@@ -68,7 +72,7 @@ def generate_embedding(text: str):
     return response.json()["predictions"][0]["embeddings"]["values"]
 
 # ----------------------------
-# Text Generation logic for Gemini Flash
+# Text Generation logic
 # ----------------------------
 def call_vertex_generation_api(prompt: str, token: str):
     url = (
@@ -85,9 +89,7 @@ def call_vertex_generation_api(prompt: str, token: str):
         "contents": [
             {
                 "role": "user",
-                "parts": [
-                    {"text": prompt}
-                ]
+                "parts": [{"text": prompt}]
             }
         ],
         "generationConfig": {
@@ -98,8 +100,7 @@ def call_vertex_generation_api(prompt: str, token: str):
         }
     }
 
-    response = requests.post(url, headers=headers, json=payload)
-    return response
+    return requests.post(url, headers=headers, json=payload)
 
 def generate_answer(prompt: str) -> str:
     token = get_access_token()
