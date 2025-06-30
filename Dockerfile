@@ -14,11 +14,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Download spaCy model
 RUN python -m spacy download en_core_web_sm
 
-# Set environment variable so GCP SDK picks the right credentials
-ENV GOOGLE_APPLICATION_CREDENTIALS="/app/secrets/serviceaccount.json"
+# ❌ Remove hardcoded service account path
+# ✅ Do NOT set GOOGLE_APPLICATION_CREDENTIALS here
 
 # Expose FastAPI port
 EXPOSE 8080
 
-# Start the FastAPI app using Uvicorn
+# Start FastAPI with Uvicorn
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
