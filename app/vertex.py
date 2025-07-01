@@ -20,10 +20,10 @@ SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 # ----------------------------
 def get_access_token():
     if GOOGLE_CLOUD_ENV == "cloudrun":
-        # ✅ Use Application Default Credentials in Cloud Run
+        # ✅ Uses Application Default Credentials in Cloud Run
         credentials, _ = google.auth.default(scopes=SCOPES)
     else:
-        # ✅ Use service account file locally
+        # ✅ Uses service account file locally
         service_account_path = get_env_variable("GOOGLE_APPLICATION_CREDENTIALS")
         credentials = service_account.Credentials.from_service_account_file(
             service_account_path, scopes=SCOPES
