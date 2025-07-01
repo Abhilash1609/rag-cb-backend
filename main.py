@@ -31,7 +31,10 @@ app = FastAPI()
 # CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",               # local dev
+        "https://34.120.151.57.nip.io",        # your HTTPS frontend IP/domain
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

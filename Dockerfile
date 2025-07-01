@@ -14,8 +14,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Download spaCy model
 RUN python -m spacy download en_core_web_sm
 
-# ❌ Remove hardcoded service account path
-# ✅ Do NOT set GOOGLE_APPLICATION_CREDENTIALS here
 
 # Expose FastAPI port
 EXPOSE 8080
