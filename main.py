@@ -10,6 +10,7 @@ from app.auth import verify_google_token
 from app.qdrant_client import client, init_user_collections
 from app.rag_logic import ask_question
 from qdrant_client.models import Filter, FieldCondition, MatchValue
+from datetime import datetime
 
 # Logging config
 logging.basicConfig(level=logging.INFO)
@@ -114,18 +115,28 @@ def get_chat_history(req: GetChatHistoryRequest):
                 FieldCondition(key="user_id", match=MatchValue(value=user_id)),
             ]),
             limit=100,
+            with_payload=True,
+        )
+
+        sorted_results = sorted(
+            results[0],
+            key=lambda x: x.payload.get("timestamp", ""),
         )
 
         messages = []
-        for point in results[0]:
+        for point in sorted_results:
             payload = point.payload
             if "question" in payload and "answer" in payload:
-                messages.append({"question": payload["question"], "answer": payload["answer"]})
+                messages.append({
+                    "question": payload["question"],
+                    "answer": payload["answer"],
+                })
 
         return {"messages": messages}
     except Exception as e:
         logger.error("❌ Error in /get_chat_history: %s", e)
         raise HTTPException(status_code=400, detail=str(e))
+
 
 
 @app.post("/list_chats")
@@ -168,6 +179,7 @@ def ask(req: AskRequest):
                     "chat_id": req.chat_id,
                     "question": req.question,
                     "answer": answer,
+                    "timestamp": datetime.utcnow().timestamp(),
                 }
             }]
         )

@@ -20,18 +20,16 @@ def init_qdrant_collection(collection_name: str = "chatbot_chunks", vector_size:
 def init_user_collections():
     existing_collections = [c.name for c in client.get_collections().collections]
 
-    # ✅ user_chats: 3072-dim dummy vector
     if "user_chats" not in existing_collections:
         client.recreate_collection(
             collection_name="user_chats",
-            vectors_config=VectorParams(size=3072, distance=Distance.COSINE),  # fixed dimension
+            vectors_config=VectorParams(size=3072, distance=Distance.COSINE),
             on_disk_payload=True
         )
         client.create_payload_index("user_chats", "user_id", PayloadSchemaType.KEYWORD)
         client.create_payload_index("user_chats", "chat_id", PayloadSchemaType.KEYWORD)
         client.create_payload_index("user_chats", "chat_title", PayloadSchemaType.KEYWORD)
 
-    # ✅ chat_messages: real 3072-dim vectors
     if "chat_messages" not in existing_collections:
         client.recreate_collection(
             collection_name="chat_messages",
@@ -40,7 +38,7 @@ def init_user_collections():
         )
         client.create_payload_index("chat_messages", "user_id", PayloadSchemaType.KEYWORD)
         client.create_payload_index("chat_messages", "chat_id", PayloadSchemaType.KEYWORD)
-
+        client.create_payload_index("chat_messages", "timestamp", PayloadSchemaType.FLOAT)
 
 def search_similar_docs(collection_name: str, query_vector: list[float], top_k: int = 3):
     return client.search(
