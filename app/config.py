@@ -2,20 +2,20 @@ import os
 from dotenv import load_dotenv
 from io import StringIO
 
-# Load local .env during development
+# Loading local .env during development
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 LOCAL_ENV_PATH = os.path.join(BASE_DIR, "..", "secrets", ".env")
 
 if os.path.exists(LOCAL_ENV_PATH):
     load_dotenv(dotenv_path=LOCAL_ENV_PATH)
 
-# Load secret-based env vars if in Cloud Run
+# Loading secret-based env vars if in Cloud Run
 if os.getenv("GOOGLE_CLOUD_ENV") == "cloudrun":
     secret_env = os.getenv("ENV_CONFIG")
     if secret_env:
         load_dotenv(stream=StringIO(secret_env))
 
-# Set GOOGLE_APPLICATION_CREDENTIALS abs path only locally
+# Setting GOOGLE_APPLICATION_CREDENTIALS abs path only locally
 if os.getenv("GOOGLE_CLOUD_ENV") != "cloudrun":
     credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     if credentials_path:

@@ -6,7 +6,7 @@ from google.oauth2 import service_account
 import google.auth.transport.requests
 from app.config import get_env_variable
 
-# Load environment variables
+# Loading environment variables
 PROJECT_ID = os.getenv("GCP_PROJECT_ID")
 LOCATION = os.getenv("GCP_LOCATION", "us-central1")
 EMBEDDING_MODEL_ID = "gemini-embedding-001"
@@ -16,7 +16,7 @@ GOOGLE_CLOUD_ENV = os.getenv("GOOGLE_CLOUD_ENV", "local")  # Default to local
 SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 
 # ----------------------------
-# Auth: Get access token
+# Auth: Getting access token
 # ----------------------------
 def get_access_token():
     if GOOGLE_CLOUD_ENV == "cloudrun":
